@@ -23,12 +23,6 @@ from icalendar import Calendar, Event
 from datetime import datetime, timedelta
 
 
-def fb(item):
-    if item == True:
-        return "Free"
-    else:
-        return "Busy"
-
 def free_or_busy(mycallist, potentialdatetime):
     #Returns true or false, True = free, False = busy
     for tempCal in mycallist:
@@ -186,15 +180,12 @@ def main():
                 t+=1
                 for item in row:
                     if item == True:
-                        print "<td style='background-color:#66cc66; color:#66cc66;'>" + fb(item) + "</td>"
+                        print "<td style='background-color:#66cc66; color:#66cc66;'>Free</td>"
                     else:
-                        print "<td style='background-color:#ff4d4d; color:#ff4d4d;'>" + fb(item) + "</td>"
+                        print "<td style='background-color:#ff4d4d; color:#ff4d4d;'>Busy</td>"
                 print "</tr>"
             print "</table></div id='calTab%s'>" % (c)
             c +=1
-
-
-
     return
 
 main()
