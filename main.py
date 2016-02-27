@@ -2,24 +2,24 @@
 # -*- coding: utf-8 -*-
 __author__ = 'Alex Zwetsloot; alex@zwetsloot.uk'
 
-#Settings
-#Your caldav address - you can find this in your ~/Library/Calendars folder on Mac/Calendar.app
+# Settings
+# Your caldav address - you can find this in your ~/Library/Calendars folder on Mac/Calendar.app
 url = "https://p18-caldav.icloud.com/1744618118/calendars/work/"
-#Your (apple?) username.
-user = "moi@moi"
-#And the password
-password="thePikachusAreComingCoverYourBumBums"
+# Your (apple?) username.
+user = "foo@bar.com"
+# And the password
+password="foobar"
 
-#See bottom of file to configure html styles.
+# See bottom of file to configure html styles.
 dev_mode = False
-#If True, will read CalDav data from caldav.pckl rather than getting it fresh from the website.
+# If True, will read CalDav data from caldav.pckl rather than getting it fresh from the website.
 
 import caldav
 import pytz
 import time
 import os.path
 import pickle
-from icalendar import Calendar, Event
+from icalendar import Calendar
 from datetime import datetime, timedelta
 
 
@@ -130,18 +130,15 @@ def main():
     #Make a list [each week] of dictionaries [each day] of lists [each time point to be sampled]
     c = 0
     for table in columnHeaders:
-        daycount = 0
-        tempList = list()
         tempDict = dict()
         for daylabel in range(0, len(table)):
-            daycount += 1
             innerList = list()
             innerList.append(tableList[c][daylabel])
             for num in range(1, len(mytimes)-1):
                 innerList.append((tableList[c][daylabel] + (timeResolution * num)))
             tempDict[columnHeaders[c][daylabel]] = innerList
         listOfTimes.append(tempDict)
-        c+=1
+        c += 1
 
     # This is nasty looking and has a ridiculous amount of nested lists.
     # listOfTimes = week1, week2 0, 1, 2, etc
@@ -149,21 +146,19 @@ def main():
     # so each individual time is listOfTimes[0]['commonname'] and each individual time is 0, 1, 2, 3 etc.
     # This format is good for us conceptually, but html tables work in rows and columns where you need to tell it
     # all of the first row, second row, etc.
-    c=0
     weekList = list()
-    for week in listOfTimes:
-        #For each timepoint of the day
+    for week in listOfTimes:                            #For each week we want to generate data for.
         daytimes = list()
-        for t in range(0, len(mytimes)-1):
+        for t in range(0, len(mytimes)-1):              #For each time point in the day we care about (t)
             timePoint = list()
-            #For each day I have info for
-            for day in sorted(week, key=week.get):
-                timePoint.append(free_or_busy(callist, week[day][t]))
+            for day in sorted(week, key=week.get):      #For each day in the week
+                timePoint.append(free_or_busy(callist, week[day][t])) #Get the timepoint free/busy status (t)
             daytimes.append(timePoint)
-        weekList.append(daytimes)
+        weekList.append(daytimes)                       #Output our logic'd values as weekList.
 
     print "Data generated %s " % time.strftime("%d/%m %H:%M")
-    c=0
+
+    c = 0
     for week in weekList:
             print """
             <div id='calTab%s'>
