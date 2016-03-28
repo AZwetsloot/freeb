@@ -1,14 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 __author__ = 'Alex Zwetsloot; alex@zwetsloot.uk'
+#Requirements: pytz, caldav, tzlocal, icalendar (all available with pip)
 
 # Settings
 # Your caldav address - you can find this in your ~/Library/Calendars folder on Mac/Calendar.app
 url = "https://p18-caldav.icloud.com/1744618118/calendars/work/"
 # Your (apple?) username.
-user = "foo@bar.com"
+user = "foo@bar"
 # And the password
-password="foobar"
+password="f00bar"
 
 # See bottom of file to configure html styles.
 dev_mode = False
@@ -21,6 +22,8 @@ import os.path
 import pickle
 from icalendar import Calendar
 from datetime import datetime, timedelta
+import tzlocal
+
 
 
 def free_or_busy(mycallist, potentialdatetime):
@@ -34,7 +37,14 @@ def free_or_busy(mycallist, potentialdatetime):
                     eventEnd = eventEnd.replace(tzinfo=pytz.UTC)
                 if eventStart.tzinfo == None:
                     eventStart = eventStart.replace(tzinfo=pytz.UTC)
-                if potentialdatetime < eventEnd and potentialdatetime >= eventStart:
+                #N.B: timezones - calendar data always UTC.
+                #Potentialdatetime is localized to localtimezone and events are localized to the same
+                #This way the labels match up correctly.
+                #Localize tz
+                tz = pytz.timezone(str(tzlocal.get_localzone()))
+                now = datetime.utcnow()
+                tzoffset = tz.utcoffset(now)
+                if potentialdatetime < eventEnd+tzoffset and potentialdatetime >= eventStart+tzoffset:
                     return False
                 else:
                     pass
@@ -98,7 +108,7 @@ def main():
     tableList = list()
 
     # This is how I populate it with wk1 Mon-Fri, wk2 Mon-Fri
-    monday_at_nine = (datetime.today() - timedelta(days=datetime.today().weekday())).replace(hour=9,minute=0,second=0,microsecond=0,tzinfo=pytz.UTC)
+    monday_at_nine = (datetime.today() - timedelta(days=datetime.today().weekday())).replace(hour=9,minute=0,second=0,microsecond=0,tzinfo=tzlocal.get_localzone())
     monday_next_week = monday_at_nine + timedelta(days=7)
     wk1list = list()
     wk2list = list()
@@ -152,6 +162,13 @@ def main():
         for t in range(0, len(mytimes)-1):              #For each time point in the day we care about (t)
             timePoint = list()
             for day in sorted(week, key=week.get):      #For each day in the week
+                #naiveDt = week[day][t]
+                #print "Naive: " + str(naiveDt)
+                #localized = pytz.timezone("Europe/London").localize(naiveDt)
+                #print "Localized: " + str(localized)
+                #converted = localized.asctimezone(pytz.timezone("UTC"))
+                #print "Converted: " + str(converted)
+                #raw_input()
                 timePoint.append(free_or_busy(callist, week[day][t])) #Get the timepoint free/busy status (t)
             daytimes.append(timePoint)
         weekList.append(daytimes)                       #Output our logic'd values as weekList.
